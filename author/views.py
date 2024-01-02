@@ -1,9 +1,10 @@
 from django.shortcuts import render,redirect
 from . import forms
 from django.contrib.auth.forms import AuthenticationForm,PasswordChangeForm
-from django.contrib.auth import authenticate,login,update_session_auth_hash
+from django.contrib.auth import authenticate,login,update_session_auth_hash,logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from post.models import Post
 # Create your views here.
 # def add_author(request):
 #     if request.method == 'POST':
@@ -42,10 +43,15 @@ def user_login(request):
                 return redirect('user_login')
     else:
         form = AuthenticationForm()
-        return render(request,'register.html',{'form':form,'type':'Login'})
+    return render(request,'register.html',{'form':form,'type':'Login'})
 
 @login_required
 def profile(request):
+    data=Post.objects.filter(author=request.user)
+    return render(request, 'profile.html',{'data':data})
+
+@login_required
+def edit_profile(request):
     if request.method == 'POST':
         profile_form = forms.ChangeUserData(request.POST,instance=request.user)
         if profile_form.is_valid():
@@ -54,7 +60,7 @@ def profile(request):
             return redirect('profile')
     else:
         profile_form = forms.ChangeUserData(instance=request.user)
-    return render(request, 'profile.html',{'form':profile_form})
+    return render(request, 'update_profile.html', {'form': profile_form})
 
 def pass_change(request):
     if request.method == 'POST':
@@ -67,3 +73,7 @@ def pass_change(request):
     else:
         form = PasswordChangeForm(user=request.user)
     return render(request, 'pass_change.html',{'form':form})
+
+def user_logout(request):
+    logout(request)
+    return redirect('user_login')
